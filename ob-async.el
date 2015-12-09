@@ -4,9 +4,13 @@
 (defun link/org-babel-execute-async ()
   "Asynchronously execute the current source code block."
   (interactive)
-  (save-buffer)
   (let ((uuid (org-id-uuid))
-        (name (org-element-property :name (org-element-context))))
+        (name (org-element-property :name (org-element-context)))
+        tempfile)
+    (setq tempfile (concat "tmp-" uuid ".org"))
+    (save-excursion
+      (save-restriction
+        (write-region (point-min) (point-max) tempfile)))
     (save-excursion
       (re-search-forward "#\\+END_SRC")
       (org-babel-remove-result)
@@ -16,9 +20,7 @@
     (async-start 
      `(lambda ()
         (load-file (expand-file-name "~/.emacs.d/init.el"))
-        (defun ask-user-about-lock (file opponent))
-        (global-auto-revert-mode -1)
-        (find-file ,(buffer-file-name))
+        (find-file ,tempfile)
         (goto-char ,(point))
         (org-babel-execute-src-block)
         (let ((location (org-babel-where-is-src-block-result))
@@ -33,6 +35,8 @@
           (setq err (when (get-buffer "*Org-Babel Error Output*")
                       (with-current-buffer "*Org-Babel Error Output*"
                         (buffer-string))))
+          (kill-buffer)
+          (delete-file ,tempfile)
           (list :out out :err err)))
      `(lambda (result)
         (let ((out (plist-get result :out))
