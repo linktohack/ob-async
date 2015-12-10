@@ -1,9 +1,11 @@
 (require 'async)
 (require 'org-id)
 
-(defun link/org-babel-execute-async ()
+(defun link/org-babel-execute-async (&optional init-file)
   "Asynchronously execute the current source code block."
-  (interactive)
+  (interactive (list (if current-prefix-arg
+                         (read-from-minibuffer "Init file: ")
+                       user-init-file)))
   (let ((uuid (org-id-uuid))
         (name (org-element-property :name (org-element-context)))
         tempfile)
@@ -12,6 +14,7 @@
       (save-restriction
         (write-region (point-min) (point-max) tempfile)))
     (save-excursion
+      (beginning-of-line)
       (re-search-forward "#\\+END_SRC")
       (org-babel-remove-result)
       (insert (format
@@ -19,7 +22,7 @@
                (if name (concat " " name) "") uuid)))
     (async-start 
      `(lambda ()
-        (load-file (expand-file-name "~/.emacs.d/init.el"))
+        (load-file ,init-file)
         (find-file ,tempfile)
         (goto-char ,(point))
         (org-babel-execute-src-block)
