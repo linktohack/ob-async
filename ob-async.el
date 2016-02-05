@@ -17,7 +17,11 @@
       (org-babel-remove-result)
       (insert (format
                "\n\n#+RESULTS:%s\n: %s"
-               (if name (concat " " name) "") uuid)))
+               (if name (concat " " name) "") uuid))
+      (let ((end (point)))
+        (previous-line)
+        (beginning-of-line)
+        (org-indent-region (point) end)))
     (async-start 
      `(lambda ()
         (load-file ,init-file)
