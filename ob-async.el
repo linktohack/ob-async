@@ -10,17 +10,14 @@
         (name (org-element-property :name (org-element-context)))
         tempfile)
     (setq tempfile (concat "tmp-" uuid ".org"))
+    (write-region (point-min) (point-max) tempfile)
     (save-excursion
-      (save-restriction
-        (write-region (point-min) (point-max) tempfile)))
-    (save-excursion
-      (save-restriction
       (beginning-of-line)
       (re-search-forward "#\\+END_SRC")
       (org-babel-remove-result)
       (insert (format
                "\n\n#+RESULTS:%s\n: %s"
-               (if name (concat " " name) "") uuid))))
+               (if name (concat " " name) "") uuid)))
     (async-start 
      `(lambda ()
         (load-file ,init-file)
@@ -46,14 +43,14 @@
      `(lambda (result)
         (let ((out (plist-get result :out))
               (err (plist-get result :err)))
-          (save-window-excursion
+          (with-current-buffer ,(buffer-name)
             (save-excursion
-              (save-restriction
-                (with-current-buffer ,(buffer-name)
-                  (goto-char (point-min))
-                  (when (re-search-forward ,uuid nil t)
-                    (kill-whole-line)
-                    (insert out))))))
+              (org-save-outline-visibility t
+                (outline-show-all)
+                (goto-char (point-min))
+                (when (re-search-forward ,uuid nil t)
+                  (kill-whole-line)
+                  (insert out)))))
           (when err
             (display-buffer
              (with-current-buffer (get-buffer-create "*Org-Babel Async Output*")
