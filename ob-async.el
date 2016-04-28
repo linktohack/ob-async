@@ -5,7 +5,9 @@
   "Asynchronously execute the current source code block."
   (interactive (list (if current-prefix-arg
                          (read-from-minibuffer "Init file: ")
-                       user-init-file)))
+                       (or (and (boundp 'org-export-async-init-file)
+                                org-export-async-init-file)
+                           user-init-file))))
   (let ((uuid (org-id-uuid))
         (name (org-element-property :name (org-element-context)))
         tempfile)
@@ -22,7 +24,7 @@
         (previous-line)
         (beginning-of-line)
         (org-indent-region (point) end)))
-    (async-start 
+    (async-start
      `(lambda ()
         (load-file ,init-file)
         (defun ask-user-about-lock (file opponent))
