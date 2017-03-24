@@ -74,8 +74,8 @@
   (org-babel-eval-wipe-error-buffer)
   (org-save-outline-visibility t
     (org-babel-map-executables nil
-      (if (looking-at org-babel-lob-one-liner-regexp)
-          (org-babel-lob-execute-maybe)
-        (link/org-babel-execute-src-block-async init-file)))))
+      (if (looking-at org-babel-src-block-regexp)
+          (link/org-babel-execute-src-block-async init-file)
+        (org-babel-execute-src-block)))))
 
 (provide 'ob-async)
