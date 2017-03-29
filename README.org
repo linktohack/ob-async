@@ -1,4 +1,37 @@
 * What
 Evaluate =org-src-block= asynchronously
+
+* How
+
+```emacs-lisp
+(setq user-init-file "~/Downloads/1.el"
+      user-emacs-directory "~/.emacs.me.d/")
+(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+                         ("melpa" . "http://melpa.milkbox.net/packages/")
+                         ("org" . "http://orgmode.org/elpa/"))
+      package-enable-at-startup nil)
+(package-initialize)
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(use-package async :ensure :demand
+  :init (setq async-bytecomp-allowed-packages '(all))
+  :config (async-bytecomp-package-mode 1))
+
+(use-package org :defer
+  :load-path "~/Dropbox/ProjectWeekends/lisp/ob-async/"
+  :config
+  (require 'ob)
+  (require 'ob-async)
+  (setq org-confirm-babel-evaluate nil
+        org-export-babel-evaluate 'inline-only)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t) (org . t)
+     (shell . t) (makefile . t)
+     (latex . t)
+     (fortran . t) (gnuplot . t) (python . t))))
+```
+
 * License
 MIT
